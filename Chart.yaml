@@ -1,0 +1,13 @@
+apiVersion: v2
+name: estafen
+description: Production-grade Helm chart for estafen Kubernetes deployment
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - estafen
+  - kubernetes
+  - production
+maintainers:
+  - name: Cloud Engineering Team
+    email: cloud-team@estafen.io

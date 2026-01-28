@@ -1,0 +1,179 @@
+replicaCount: 3
+
+image:
+  repository: estafen/app
+  pullPolicy: IfNotPresent
+  tag: "1.0.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+namespace:
+  name: estafen
+  create: true
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 8080
+  annotations: {}
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: estafen.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: estafen-tls
+      hosts:
+        - estafen.example.com
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - estafen
+          topologyKey: kubernetes.io/hostname
+
+daemonset:
+  enabled: true
+  image:
+    repository: prom/node-exporter
+    tag: "v1.7.0"
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+secrets:
+  database:
+    username: ZXN0YWZlbi11c2Vy
+    password: Y2hhbmdlLW1lLXBsZWFzZQ==
+    host: ZGIuZXN0YWZlbi5pbnRlcm5hbA==
+
+cloudProvider: aws
+
+aws:
+  region: us-east-1
+  securityGroupPolicy:
+    enabled: true
+    groupIds:
+      - sg-0123456789abcdef0
+      - sg-0fedcba9876543210
+  accessEntries:
+    enabled: true
+    entries:
+      - principalArn: arn:aws:iam::123456789012:role/EKSAdminRole
+        type: STANDARD
+        policies:
+          - arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy
+      - principalArn: arn:aws:iam::123456789012:role/EKSDeveloperRole
+        type: STANDARD
+        policies:
+          - arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy
+
+gcp:
+  region: us-central1
+  projectId: estafen-project
+  network: default
+
+karpenter:
+  enabled: true
+  nodePool:
+    name: general-purpose
+    instanceTypes:
+      - t3.medium
+      - t3.large
+      - t3a.medium
+      - t3a.large
+    capacityType: spot
+    minSize: 2
+    maxSize: 20
+  ec2NodeClass:
+    amiFamily: AL2
+    subnetSelectorTags:
+      karpenter.sh/discovery: estafen-cluster
+    securityGroupSelectorTags:
+      karpenter.sh/discovery: estafen-cluster
+
+monitoring:
+  prometheus:
+    enabled: true
+    scrapeInterval: 30s
+  grafana:
+    enabled: true
+    adminPassword: changeme
