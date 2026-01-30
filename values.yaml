@@ -1,7 +1,9 @@
-replicaCount: 3
+# Simplified values for intermediate-level Kubernetes deployment
+
+replicaCount: 2
 
 image:
-  repository: estafen/app
+  repository: estafen/api
   pullPolicy: IfNotPresent
   tag: "1.0.0"
 
@@ -39,34 +41,29 @@ service:
   annotations: {}
 
 ingress:
-  enabled: true
+  enabled: false
   className: nginx
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
     - host: estafen.example.com
       paths:
         - path: /
           pathType: Prefix
-  tls:
-    - secretName: estafen-tls
-      hosts:
-        - estafen.example.com
+  tls: []
 
 resources:
   limits:
-    cpu: 1000m
-    memory: 1Gi
-  requests:
     cpu: 500m
     memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
 
 autoscaling:
   enabled: true
-  minReplicas: 3
-  maxReplicas: 10
+  minReplicas: 2
+  maxReplicas: 5
   targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 80
 
@@ -105,75 +102,15 @@ affinity:
                   - estafen
           topologyKey: kubernetes.io/hostname
 
-daemonset:
-  enabled: true
-  image:
-    repository: prom/node-exporter
-    tag: "v1.7.0"
-    pullPolicy: IfNotPresent
-  resources:
-    limits:
-      cpu: 200m
-      memory: 128Mi
-    requests:
-      cpu: 100m
-      memory: 64Mi
+env:
+  APP_VERSION: "1.0.0"
+  PORT: "8080"
 
-secrets:
-  database:
-    username: ZXN0YWZlbi11c2Vy
-    password: Y2hhbmdlLW1lLXBsZWFzZQ==
-    host: ZGIuZXN0YWZlbi5pbnRlcm5hbA==
-
-cloudProvider: aws
-
-aws:
+# External Secrets Operator (AWS Secrets Manager)
+# Ver SECRETS-GUIDE.md para instrucciones completas
+externalSecrets:
+  enabled: false  # Cambiar a true para habilitar
   region: us-east-1
-  securityGroupPolicy:
-    enabled: true
-    groupIds:
-      - sg-0123456789abcdef0
-      - sg-0fedcba9876543210
-  accessEntries:
-    enabled: true
-    entries:
-      - principalArn: arn:aws:iam::123456789012:role/EKSAdminRole
-        type: STANDARD
-        policies:
-          - arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy
-      - principalArn: arn:aws:iam::123456789012:role/EKSDeveloperRole
-        type: STANDARD
-        policies:
-          - arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy
-
-gcp:
-  region: us-central1
-  projectId: estafen-project
-  network: default
-
-karpenter:
-  enabled: true
-  nodePool:
-    name: general-purpose
-    instanceTypes:
-      - t3.medium
-      - t3.large
-      - t3a.medium
-      - t3a.large
-    capacityType: spot
-    minSize: 2
-    maxSize: 20
-  ec2NodeClass:
-    amiFamily: AL2
-    subnetSelectorTags:
-      karpenter.sh/discovery: estafen-cluster
-    securityGroupSelectorTags:
-      karpenter.sh/discovery: estafen-cluster
-
-monitoring:
-  prometheus:
-    enabled: true
-    scrapeInterval: 30s
-  grafana:
-    enabled: true
-    adminPassword: changeme
+  secretName: estafen/database
+  refreshInterval: 1h
+  useIRSA: true  # true para EKS con IRSA, false para IAM role de nodos

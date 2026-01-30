@@ -1,0 +1,132 @@
+Thank you for installing {{ .Chart.Name }}!
+
+═══════════════════════════════════════════════════════════════════
+
+📦 DEPLOYMENT INFORMATION
+
+  Namespace:        {{ .Values.namespace.name }}
+  Release Name:     {{ .Release.Name }}
+  Chart Version:    {{ .Chart.Version }}
+  App Version:      {{ .Chart.AppVersion }}
+  Replicas:         {{ .Values.replicaCount }}
+
+═══════════════════════════════════════════════════════════════════
+
+🌐 ACCESSING YOUR APPLICATION
+
+{{- if eq .Values.service.type "LoadBalancer" }}
+
+  Service Type:     LoadBalancer
+  
+  Get the LoadBalancer IP:
+  
+    $ kubectl get svc {{ include "estafen.fullname" . }} -n {{ .Values.namespace.name }}
+  
+  Once the EXTERNAL-IP is assigned, access your application:
+  
+    $ curl http://<EXTERNAL-IP>/api
+    $ curl http://<EXTERNAL-IP>/health
+
+  Note: On Minikube, run 'minikube tunnel' in another terminal.
+
+{{- else if eq .Values.service.type "ClusterIP" }}
+
+  Service Type:     ClusterIP
+  
+  Port-forward to access locally:
+  
+    $ kubectl port-forward -n {{ .Values.namespace.name }} svc/{{ include "estafen.fullname" . }} 8080:{{ .Values.service.port }}
+  
+  Then access:
+    $ curl http://localhost:8080/api
+    $ curl http://localhost:8080/health
+
+{{- end }}
+
+═══════════════════════════════════════════════════════════════════
+
+🔍 MONITORING YOUR DEPLOYMENT
+
+  Check pod status:
+    $ kubectl get pods -n {{ .Values.namespace.name }}
+
+  View logs:
+    $ kubectl logs -n {{ .Values.namespace.name }} -l app.kubernetes.io/name={{ include "estafen.name" . }} --tail=50 -f
+
+  Check deployment:
+    $ kubectl get deployment -n {{ .Values.namespace.name }}
+
+{{- if .Values.autoscaling.enabled }}
+
+  Check HPA status:
+    $ kubectl get hpa -n {{ .Values.namespace.name }}
+    $ kubectl describe hpa {{ include "estafen.fullname" . }} -n {{ .Values.namespace.name }}
+
+{{- end }}
+
+═══════════════════════════════════════════════════════════════════
+
+📊 API ENDPOINTS
+
+  /api      - Main API endpoint (returns app info)
+  /health   - Health check (liveness probe)
+  /ready    - Readiness check (readiness probe)
+
+═══════════════════════════════════════════════════════════════════
+
+🧪 TEST AUTO-SCALING (HPA)
+
+{{- if .Values.autoscaling.enabled }}
+
+  1. Watch HPA:
+     $ kubectl get hpa -n {{ .Values.namespace.name }} -w
+
+  2. Generate load (in another terminal):
+     $ kubectl run -i --tty load-generator --rm --image=busybox --restart=Never -- /bin/sh
+     
+     # Inside the pod:
+     while true; do wget -q -O- http://{{ include "estafen.fullname" . }}.{{ .Values.namespace.name }}.svc.cluster.local/api; done
+
+  3. Watch pods scale:
+     $ kubectl get pods -n {{ .Values.namespace.name }} -w
+
+{{- else }}
+
+  HPA is disabled. Enable it in values.yaml:
+    autoscaling:
+      enabled: true
+
+{{- end }}
+
+═══════════════════════════════════════════════════════════════════
+
+🛠️ USEFUL COMMANDS
+
+  View all resources:
+    $ kubectl get all -n {{ .Values.namespace.name }}
+
+  Describe a pod:
+    $ kubectl describe pod -n {{ .Values.namespace.name }} <pod-name>
+
+  Execute shell in a pod:
+    $ kubectl exec -it -n {{ .Values.namespace.name }} <pod-name> -- /bin/sh
+
+  Update the deployment:
+    $ helm upgrade {{ .Release.Name }} . -n {{ .Values.namespace.name }}
+
+  Rollback:
+    $ helm rollback {{ .Release.Name }} -n {{ .Values.namespace.name }}
+
+═══════════════════════════════════════════════════════════════════
+
+📚 NEXT STEPS
+
+  1. Verify deployment health
+  2. Test the API endpoints
+  3. Try scaling with HPA
+  4. Check the logs
+  5. Explore the Kubernetes resources created
+
+For more information, see README.md
+
+Happy Helming! 🚀
