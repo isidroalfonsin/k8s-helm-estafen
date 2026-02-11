@@ -1,28 +1,21 @@
 # Estafen Helm Chart - Intermediate Level
 
-Helm chart simplificado para aprender Kubernetes con una aplicación Node.js de ejemplo.
+Helm chart Kubernetes con una aplicación Node.js de ejemplo.
 
-## 🎯 **Características**
+## **Características**
 
-- ✅ **Aplicación Node.js simple** con endpoints de health
-- ✅ **Deployment** con 2 réplicas y RollingUpdate
-- ✅ **Service LoadBalancer** para acceso externo
-- ✅ **HPA** (auto-scaling de pods)
-- ✅ **RBAC** básico
-- ✅ **Dockerfile** incluido
-- ✅ **AWS EKS ready** - Ver [EKS-DEPLOYMENT.md](EKS-DEPLOYMENT.md)
-- ✅ **AWS Secrets Manager** - Ver [SECRETS-GUIDE.md](SECRETS-GUIDE.md)
+- **Aplicación Node.js simple** con endpoints de health
+- **Deployment** con 2 réplicas y RollingUpdate
+- **Service LoadBalancer** para acceso externo
+- **HPA** (auto-scaling de pods)
+- **RBAC** básico
+- **Dockerfile** incluido
+- **AWS EKS ready**
+- **AWS Secrets Manager**
 
-## 📋 **Prerequisitos**
+## **Inicio Rápido**
 
-- Kubernetes 1.28+ (EKS, Minikube, Kind, etc.)
-- Helm 3.10+
-- Docker (para construir la imagen)
-- kubectl configurado
-
-## 🚀 **Inicio Rápido**
-
-### 1. Construir la Imagen Docker
+### 1. Construir la imagen Docker
 
 ```bash
 # Construir la imagen
@@ -40,52 +33,38 @@ curl http://localhost:8080/api
 
 **Opción A: Docker Hub**
 ```bash
-docker tag estafen/api:1.0.0 tu-usuario/estafen-api:1.0.0
-docker push tu-usuario/estafen-api:1.0.0
-```
-
-**Opción B: AWS ECR**
-```bash
-# Crear repositorio
-aws ecr create-repository --repository-name estafen-api
-
-# Login
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123456789012.dkr.ecr.us-east-1.amazonaws.com
-
-# Tag y push
-docker tag estafen/api:1.0.0 123456789012.dkr.ecr.us-east-1.amazonaws.com/estafen-api:1.0.0
-docker push 123456789012.dkr.ecr.us-east-1.amazonaws.com/estafen-api:1.0.0
+docker tag estafen/api:1.0.0 user/estafen-api:1.0.0
+docker push user/estafen-api:1.0.0
 ```
 
 ### 3. Actualizar values.yaml
 
-Edita `values.yaml` con tu imagen:
+Edita `values.yaml` con la nueva imagen:
 
 ```yaml
 image:
-  repository: tu-usuario/estafen-api  # o tu ECR URL
+  repository: user/estafen-api
   tag: "1.0.0"
 ```
 
 ### 4. Instalar con Helm
 
 ```bash
-# Validar el chart
+# Validar el chart con lint
 helm lint .
 
-# Ver los manifiestos que se generarán
-helm template estafen . --debug
+# se habilito el kubernetes cluster en docker hub y luego se ejecuto el siguiente comando
 
-# Instalar
+# Instalar el chart
 helm install estafen . \
   --namespace estafen \
   --create-namespace
 
-# Ver el estado
+# Ver el estado del despliegue
 helm status estafen -n estafen
 ```
 
-## 🔍 **Verificar el Despliegue**
+## **Verificar el Despliegue**
 
 ```bash
 # Ver todos los recursos
@@ -104,7 +83,7 @@ kubectl get svc -n estafen
 kubectl get hpa -n estafen
 ```
 
-## 🌐 **Acceder a la Aplicación**
+## **Acceder a la Aplicación**
 
 ### Opción 1: LoadBalancer (AWS/GCP)
 
@@ -128,7 +107,7 @@ curl http://localhost:8080/api
 curl http://localhost:8080/health
 ```
 
-## 📊 **Probar Auto-scaling (HPA)**
+## **Probar Auto-scaling (HPA)**
 
 ```bash
 # Ver estado del HPA
@@ -144,7 +123,7 @@ while true; do wget -q -O- http://estafen.estafen.svc.cluster.local/api; done
 kubectl get pods -n estafen -w
 ```
 
-## 📝 **Endpoints de la API**
+## **Endpoints de la API**
 
 | Endpoint | Descripción |
 |----------|-------------|
@@ -152,7 +131,7 @@ kubectl get pods -n estafen -w
 | `/health` | Health check (liveness) |
 | `/ready` | Readiness check |
 
-## 🛠️ **Comandos Útiles**
+## **Comandos Útiles**
 
 ```bash
 # Ver logs en tiempo real
@@ -174,7 +153,7 @@ helm rollback estafen -n estafen
 helm uninstall estafen -n estafen
 ```
 
-## 📂 **Estructura del Proyecto**
+## **Estructura del Proyecto**
 
 ```
 k8s-helm-estafen/
@@ -200,32 +179,7 @@ k8s-helm-estafen/
     └── hpa.yaml           # Auto-scaling
 ```
 
-## ⚙️ **Configuración**
-
-### Valores Principales en values.yaml
-
-```yaml
-replicaCount: 2              # Número de réplicas
-
-image:
-  repository: estafen/api    # Tu imagen
-  tag: "1.0.0"
-
-service:
-  type: LoadBalancer         # O ClusterIP para local
-  port: 80
-
-autoscaling:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 5
-  targetCPUUtilizationPercentage: 70
-
-ingress:
-  enabled: false             # Cambiar a true si usas Ingress
-```
-
-## 🔧 **Personalización**
+## **Personalización**
 
 ### Cambiar el número de réplicas
 
@@ -251,7 +205,7 @@ helm upgrade estafen . \
   -n estafen
 ```
 
-## 🐛 **Troubleshooting**
+## **Troubleshooting**
 
 ### Pods no inician
 
@@ -272,7 +226,7 @@ kubectl logs -n estafen <pod-name>
 - En Kind: Usa port-forward en su lugar
 - En AWS/GCP: Espera 2-3 minutos
 
-## ☁️ **Desplegar en AWS EKS**
+##  **Desplegar en AWS EKS**
 
 Para desplegar en Amazon EKS, sigue la guía completa:
 
@@ -302,11 +256,11 @@ helm install estafen . -n estafen --create-namespace
 kubectl get svc estafen -n estafen
 ```
 
-## 🔐 **Gestión Segura de Secretos**
+## **Gestión Segura de Secretos**
 
 Para usar AWS Secrets Manager en lugar de secretos planos:
 
-📖 **[SECRETS-GUIDE.md](SECRETS-GUIDE.md)** - Guía completa de External Secrets Operator
+**[SECRETS-GUIDE.md](SECRETS-GUIDE.md)** - Guía completa de External Secrets Operator
 
 ### Características
 - ✅ Secretos encriptados en AWS Secrets Manager
@@ -315,24 +269,81 @@ Para usar AWS Secrets Manager en lugar de secretos planos:
 - ✅ Auditoría con CloudTrail
 - ✅ IRSA (IAM Roles for Service Accounts)
 
-## 📚 **Próximos Pasos**
+## **Próximos Pasos**
 
-1. ✅ Desplegar la aplicación básica
-2. 📊 Agregar Prometheus y Grafana para monitoring
-3. 🔒 Habilitar Ingress con TLS
-4. 🗄️ Agregar una base de datos
-5. 🚀 Implementar CI/CD con GitHub Actions
+1. Desplegar la aplicación básica
+2. Agregar Prometheus y Grafana para monitoring
+3. Habilitar Ingress con TLS
+4. Agregar una base de datos
+5. Implementar CI/CD con GitHub Actions
 
-## 📖 **Recursos**
+## **Errores que ocurrieron y Soluciones**
 
-- [Documentación de Helm](https://helm.sh/docs/)
-- [Kubernetes Basics](https://kubernetes.io/docs/tutorials/kubernetes-basics/)
-- [HPA Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/)
+### Error 1: Docker Build - Autenticación Fallida
 
-## 📧 **Soporte**
+**Síntoma:**
+```
+ERROR: failed to solve: failed to fetch oauth token: unexpected status from GET request to 
+https://auth.docker.io/token: 401 Unauthorized: incorrect username or password
+```
 
-Para preguntas o issues: cloud-team@estafen.io
+**Causa:**
+Las credenciales de Docker Hub no estaban correctas
+**Solución:**
+```bash
+# Cerrar sesión de Docker Hub
+docker logout
 
----
+# Iniciar sesión nuevamente
+docker login
 
-**¡Feliz aprendizaje de Kubernetes!** 🚀
+# Verificar que funciona
+docker build -t estafen/api:1.0.0 .
+```
+
+### Error 2: Kubernetes Cluster Unreachable
+
+**Síntoma:**
+```
+Error: INSTALLATION FAILED: cluster reachability check failed: kubernetes cluster unreachable: 
+Get "https://127.0.0.1:51142/version": dial tcp 127.0.0.1:51142: connect: connection refused
+```
+
+**Causa:**
+El clúster de Kubernetes no está corriendo o no está habilitado.
+
+**Solución para Docker Desktop:**
+Habilita el clúster de Kubernetes en Docker Desktop.
+
+**Verificar:**
+```bash
+kubectl cluster-info
+kubectl get nodes
+```
+
+### Error 3: External IP no Accesible en kind
+
+**Síntoma:**
+El servicio muestra una EXTERNAL-IP (ejemplo: `172.18.0.6`) pero `curl` no puede conectarse:
+```bash
+kubectl get svc estafen -n estafen
+# NAME      TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)
+# estafen   LoadBalancer   10.96.47.203   172.18.0.6    80:32441/TCP
+
+curl http://172.18.0.6/api
+# curl: (28) Connection timed out
+```
+
+**Causa:**
+En kind (Kubernetes in Docker), la IP externa está en la red interna de Docker y no es accesible directamente desde el host.
+
+**Solución: Usar Port Forward**
+```bash
+# Crear un port forward del servicio
+kubectl port-forward -n estafen svc/estafen 8080:80
+
+# En otra terminal, acceder vía localhost
+curl http://localhost:8080/api
+curl http://localhost:8080/health
+```
+
