@@ -1,17 +1,24 @@
-.DS_Store
+# Patterns to ignore when packaging Helm charts.
+
+# Version Control
 .git/
 .gitignore
-.bzr/
-.bzrignore
-.hg/
-.hgignore
-.svn/
-*.swp
-*.bak
-*.tmp
-*.orig
-*~
-.project
+.helmignore
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDEs
 .idea/
-*.tmproj
 .vscode/
+*.swp
+*.swo
+*~
+
+# Project Specific
+docs/
+.github/
+README.md
+LICENSE
+Makefile

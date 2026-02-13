@@ -1,69 +1,32 @@
-# Helm
-*.tgz
-charts/
-*.lock
+# System Files
+.DS_Store
+Thumbs.db
 
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-package-lock.json
-yarn.lock
-
-# Docker
-.dockerignore
-
-# IDE
-.vscode/
+# IDEs & Editors
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
-.DS_Store
+*.iml
 
-# Secrets (NUNCA commitear)
-secrets.yaml
+# Helm
+*.tgz
+*.lock
+charts/
+
+# Secrets & Credentials (NEVER commit these)
 *.secret
 *.key
 *.pem
 .env
-.env.local
-.env.*.local
-
-# Kubernetes
+.env.*
 kubeconfig
 *.kubeconfig
+secrets.yaml
+values-secrets.yaml
 
-# Terraform (si lo usas)
-*.tfstate
-*.tfstate.*
-.terraform/
-*.tfvars
-
-# Logs
+# Logs & Temp
 *.log
-logs/
-
-# Temporal
 tmp/
 temp/
-.cache/
-
-# AWS
-.aws/
-credentials
-
-# Helm values con secretos
-values-secrets.yaml
-values-local.yaml
-values-dev-secrets.yaml
-values-prod-secrets.yaml
-
-# Documentación (excepto README.md)
-QUICKSTART.md
-SECRETS-GUIDE.md
-SECRETS-README.md
-ESTRUCTURA.md
-*.draft.md
-EKS-DEPLOYMENT.md
