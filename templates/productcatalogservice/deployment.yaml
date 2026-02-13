@@ -1,0 +1,49 @@
+{{- if .Values.productCatalogService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.productCatalogService.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: {{ .Values.productCatalogService.name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.productCatalogService.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.productCatalogService.name }}
+    spec:
+      serviceAccountName: {{ .Values.productCatalogService.name }}
+      terminationGracePeriodSeconds: 5
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - name: server
+        image: {{ .Values.images.repository }}/{{ .Values.productCatalogService.image }}:{{ .Values.images.tag }}
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.productCatalogService.port }}
+        env:
+        - name: PORT
+          value: "{{ .Values.productCatalogService.port }}"
+        readinessProbe:
+          grpc:
+            port: {{ .Values.productCatalogService.port }}
+        livenessProbe:
+          grpc:
+            port: {{ .Values.productCatalogService.port }}
+        resources:
+          {{- toYaml .Values.productCatalogService.resources | nindent 10 }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+{{- end }}

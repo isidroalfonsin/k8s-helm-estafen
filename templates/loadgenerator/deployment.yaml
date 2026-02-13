@@ -1,0 +1,48 @@
+{{- if .Values.loadGenerator.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.loadGenerator.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: {{ .Values.loadGenerator.name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.loadGenerator.name }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.loadGenerator.name }}
+      annotations:
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
+    spec:
+      serviceAccountName: {{ .Values.loadGenerator.name }}
+      terminationGracePeriodSeconds: 5
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+
+      containers:
+      - name: main
+        image: {{ .Values.images.repository }}/{{ .Values.loadGenerator.image }}:{{ .Values.images.tag }}
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        env:
+        - name: FRONTEND_ADDR
+          value: "frontend:80"
+        - name: USERS
+          value: "10"
+        resources:
+          {{- toYaml .Values.loadGenerator.resources | nindent 10 }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+{{- end }}

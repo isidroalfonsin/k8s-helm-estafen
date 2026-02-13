@@ -1,116 +1,196 @@
-# Simplified values for intermediate-level Kubernetes deployment
+# Global Configuration
 
-replicaCount: 2
-
-image:
-  repository: isidroalfonsin/estafen-api
+# Global image settings for all microservices
+images:
+  repository: us-central1-docker.pkg.dev/google-samples/microservices-demo
+  tag: "v0.10.4"
   pullPolicy: IfNotPresent
-  tag: "1.0.0"
 
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
-
-namespace:
-  name: estafen
-  create: true
-
+# Service Account Configuration
 serviceAccount:
   create: true
   annotations: {}
   name: ""
 
-podAnnotations: {}
+# Microservices Configuration
+# ---------------------------
+# Each service has its own section to configure:
+# - enable/disable
+# - specific image (if different from global)
+# - resource limits (cpu/memory)
+# - environment variables
 
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  fsGroup: 1000
-
-securityContext:
-  allowPrivilegeEscalation: false
-  capabilities:
-    drop:
-    - ALL
-  readOnlyRootFilesystem: true
-
-service:
-  type: LoadBalancer
-  port: 80
-  targetPort: 8080
-  annotations: {}
-
-ingress:
-  enabled: false
-  className: nginx
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-  hosts:
-    - host: estafen.example.com
-      paths:
-        - path: /
-          pathType: Prefix
-  tls: []
-
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 250m
-    memory: 256Mi
-
-autoscaling:
+# 1. Email Service (Python)
+emailService:
   enabled: true
-  minReplicas: 2
-  maxReplicas: 5
-  targetCPUUtilizationPercentage: 70
-  targetMemoryUtilizationPercentage: 80
+  name: emailservice
+  image: emailservice
+  port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
 
-livenessProbe:
-  httpGet:
-    path: /health
-    port: 8080
-  initialDelaySeconds: 30
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
+# 2. Product Catalog Service (Go)
+productCatalogService:
+  enabled: true
+  name: productcatalogservice
+  image: productcatalogservice
+  port: 3550
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
 
-readinessProbe:
-  httpGet:
-    path: /ready
-    port: 8080
-  initialDelaySeconds: 10
-  periodSeconds: 5
-  timeoutSeconds: 3
-  failureThreshold: 3
+# 3. Currency Service (Node.js)
+currencyService:
+  enabled: true
+  name: currencyservice
+  image: currencyservice
+  port: 7000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
 
-nodeSelector: {}
+# 4. Payment Service (Node.js)
+paymentService:
+  enabled: true
+  name: paymentservice
+  image: paymentservice
+  port: 50051
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
 
-tolerations: []
+# 5. Shipping Service (Go)
+shippingService:
+  enabled: true
+  name: shippingservice
+  image: shippingservice
+  port: 50051
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
 
-affinity:
-  podAntiAffinity:
-    preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 100
-        podAffinityTerm:
-          labelSelector:
-            matchExpressions:
-              - key: app.kubernetes.io/name
-                operator: In
-                values:
-                  - estafen
-          topologyKey: kubernetes.io/hostname
+# 6. Cart Service (C#)
+cartService:
+  enabled: true
+  name: cartservice
+  image: cartservice
+  port: 7070
+  resources:
+    requests:
+      cpu: 200m
+      memory: 64Mi
+    limits:
+      cpu: 300m
+      memory: 128Mi
 
-env:
-  APP_VERSION: "1.0.0"
-  PORT: "8080"
+# 7. Frontend (Go) - The main public interface
+frontend:
+  enabled: true
+  name: frontend
+  image: frontend
+  # Service type LoadBalancer for external access, ClusterIP for internal
+  service:
+    type: LoadBalancer 
+    port: 80
+  env: 
+    platform: local 
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
 
-# External Secrets Operator (AWS Secrets Manager)
-# Ver SECRETS-GUIDE.md para instrucciones completas
-externalSecrets:
-  enabled: false  # Cambiar a true para habilitar
-  region: us-east-1
-  secretName: estafen/database
-  refreshInterval: 1h
-  useIRSA: true  # true para EKS con IRSA, false para IAM role de nodos
+# 8. Checkout Service (Go)
+checkoutService:
+  enabled: true
+  name: checkoutservice
+  image: checkoutservice
+  port: 5050
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+# 9. Recommendation Service (Python)
+recommendationService:
+  enabled: true
+  name: recommendationservice
+  image: recommendationservice
+  port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 220Mi
+    limits:
+      cpu: 200m
+      memory: 450Mi
+
+# 10. Ad Service (Java)
+adService:
+  enabled: true
+  name: adservice
+  image: adservice
+  port: 9555
+  resources:
+    requests:
+      cpu: 200m
+      memory: 180Mi
+    limits:
+      cpu: 300m
+      memory: 300Mi
+
+# 11. Load Generator (Python/Locust) - Simulates user traffic
+loadGenerator:
+  enabled: true
+  name: loadgenerator
+  image: loadgenerator
+  resources:
+    requests:
+      cpu: 300m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Database Configuration
+# ----------------------
+# Redis Configuration (Used by Cart Service)
+redis:
+  enabled: true
+  name: redis-cart
+  # Using public ECR image for better availability than Docker Hub
+  image: public.ecr.aws/docker/library/redis:alpine
+  port: 6379
+  resources:
+    requests:
+      cpu: 70m
+      memory: 200Mi
+    limits:
+      cpu: 125m
+      memory: 256Mi

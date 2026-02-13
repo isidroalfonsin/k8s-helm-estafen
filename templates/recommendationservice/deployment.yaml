@@ -1,0 +1,55 @@
+{{- if .Values.recommendationService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.recommendationService.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: {{ .Values.recommendationService.name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.recommendationService.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.recommendationService.name }}
+    spec:
+      serviceAccountName: {{ .Values.recommendationService.name }}
+      terminationGracePeriodSeconds: 5
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - name: server
+        image: {{ .Values.images.repository }}/{{ .Values.recommendationService.image }}:{{ .Values.images.tag }}
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.recommendationService.port }}
+        readinessProbe:
+          periodSeconds: 5
+          grpc:
+            port: {{ .Values.recommendationService.port }}
+        livenessProbe:
+          periodSeconds: 5
+          grpc:
+            port: {{ .Values.recommendationService.port }}
+        env:
+        - name: PORT
+          value: "{{ .Values.recommendationService.port }}"
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: "productcatalogservice:3550"
+        - name: ENABLE_PROFILER
+          value: "0"
+        resources:
+          {{- toYaml .Values.recommendationService.resources | nindent 10 }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+{{- end }}

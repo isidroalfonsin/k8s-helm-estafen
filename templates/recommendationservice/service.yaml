@@ -1,0 +1,17 @@
+{{- if .Values.recommendationService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.recommendationService.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: {{ .Values.recommendationService.name }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Values.recommendationService.name }}
+  ports:
+  - name: grpc
+    port: {{ .Values.recommendationService.port }}
+    targetPort: {{ .Values.recommendationService.port }}
+{{- end }}

@@ -1,0 +1,17 @@
+{{- if .Values.shippingService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.shippingService.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: {{ .Values.shippingService.name }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Values.shippingService.name }}
+  ports:
+  - name: grpc
+    port: {{ .Values.shippingService.port }}
+    targetPort: {{ .Values.shippingService.port }}
+{{- end }}

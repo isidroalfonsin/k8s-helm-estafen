@@ -1,0 +1,51 @@
+{{- if .Values.emailService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.emailService.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: {{ .Values.emailService.name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.emailService.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.emailService.name }}
+    spec:
+      serviceAccountName: {{ .Values.emailService.name }}
+      terminationGracePeriodSeconds: 5
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - name: server
+        image: {{ .Values.images.repository }}/{{ .Values.emailService.image }}:{{ .Values.images.tag }}
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.emailService.port }}
+        env:
+        - name: PORT
+          value: "{{ .Values.emailService.port }}"
+        readinessProbe:
+          periodSeconds: 5
+          grpc:
+            port: {{ .Values.emailService.port }}
+        livenessProbe:
+          periodSeconds: 5
+          grpc:
+            port: {{ .Values.emailService.port }}
+        resources:
+          {{- toYaml .Values.emailService.resources | nindent 10 }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+{{- end }}

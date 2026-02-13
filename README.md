@@ -1,349 +1,46 @@
-# Estafen Helm Chart - Intermediate Level
+# Project: Online Boutique Deployment on Kubernetes with Helm
 
-Helm chart Kubernetes con una aplicación Node.js de ejemplo.
+This project documents my process of adapting and deploying Google's "Online Boutique" (a microservices demo application) into a local Kubernetes environment using Helm.
 
-## **Características**
+The main goal was to take a complex microservices architecture (11 services + database) and build a custom Helm Chart from scratch to deploy it efficiently on my local machine.
 
-- **Aplicación Node.js simple** con endpoints de health
-- **Deployment** con 2 réplicas y RollingUpdate
-- **Service LoadBalancer** para acceso externo
-- **HPA** (auto-scaling de pods)
-- **RBAC** básico
-- **Dockerfile** incluido
-- **AWS EKS ready**
-- **AWS Secrets Manager**
+## About the Application
 
-## **Inicio Rápido**
+I chose this application because it represents a real-world e-commerce scenario: it consists of a Frontend in Go, Cart Service in C#, Recommendation Service in Python, Payment Service in Node.js, and more. All services communicate with each other via gRPC, making it perfect for testing Kubernetes orchestration.
 
-### 1. Construir la imagen Docker
+## What I Did
 
-```bash
-# Construir la imagen
-docker build -t estafen/api:1.0.0 .
+Instead of using loose Kubernetes manifests, I decided to package everything into a Helm Chart to have better control over the deployment.
 
-# Probar localmente
-docker run -p 8080:8080 estafen/api:1.0.0
+1.  **Chart Structure**: I organized the project in a modular way, with a dedicated template for each microservice and a unified global configuration.
+2.  **Flexible Configuration**: I made it easy to modify parameters like resources (CPU/RAM) or image versions without touching the template code.
+3.  **Local Adaptation**: I tweaked the configuration to ensure it works smoothly in a local environment like Kind or Docker Desktop, which has different constraints than a cloud environment (like GCP or AWS).
 
-# Verificar
-curl http://localhost:8080/health
-curl http://localhost:8080/api
-```
+## Challenges I Faced (and How I Solved Them)
 
-### 2. Subir la Imagen a un Registry
+During development, I encountered several interesting issues that I had to investigate and solve:
 
-**Opción A: Docker Hub**
-```bash
-docker tag estafen/api:1.0.0 user/estafen-api:1.0.0
-docker push user/estafen-api:1.0.0
-```
+### 1. Images Not Downloading (ImagePullBackOff)
 
-### 3. Actualizar values.yaml
+At first, nothing was working because the pods couldn't pull the images. I discovered that Docker Hub was having connection issues or rate limits with my local network.
 
-Edita `values.yaml` con la nueva imagen:
+**Solution:**
+*   For Redis, I stopped using Docker Hub and switched to the Amazon Public ECR image, which downloaded without issues.
+*   For the Google microservices, I pointed directly to Google's Artifact Registry (`us-central1-docker.pkg.dev`) instead of `gcr.io`, which was causing problems.
+*   I modified the Load Generator configuration to use a lighter and more stable base image.
 
-```yaml
-image:
-  repository: user/estafen-api
-  tag: "1.0.0"
-```
+### 2. Frontend Constant Restarts
 
-### 4. Instalar con Helm
+The frontend service would start and immediately crash. Checking the logs, I saw that the Go application was programmed to panic if a specific environment variable (`SHOPPING_ASSISTANT_SERVICE_ADDR`) was missing, even if that feature wasn't being used.
 
-```bash
-# Validar el chart con lint
-helm lint .
+**Solution:** I injected a "dummy" variable into the configuration to bypass the strict check and allow the service to start correctly.
 
-# se habilito el kubernetes cluster en docker hub y luego se ejecuto el siguiente comando
+### 3. Conflicts with Google Cloud Tools
 
-# Instalar el chart
-helm install estafen . \
-  --namespace estafen \
-  --create-namespace
+Some services (like the Payment Service) tried to automatically connect to the Google Cloud Profiler. Since they had no credentials in my local environment, they failed.
 
-# Ver el estado del despliegue
-helm status estafen -n estafen
-```
+**Solution:** I explicitly disabled these debugging tools via environment variables to force the services to run in "isolated" mode.
 
-## **Verificar el Despliegue**
+## Final Result
 
-```bash
-# Ver todos los recursos
-kubectl get all -n estafen
-
-# Ver pods
-kubectl get pods -n estafen
-
-# Ver logs
-kubectl logs -n estafen -l app.kubernetes.io/name=estafen --tail=50
-
-# Ver el service
-kubectl get svc -n estafen
-
-# Ver HPA
-kubectl get hpa -n estafen
-```
-
-## **Acceder a la Aplicación**
-
-### Opción 1: LoadBalancer (AWS/GCP)
-
-```bash
-# Obtener la IP externa
-kubectl get svc estafen -n estafen
-
-# Esperar a que aparezca EXTERNAL-IP
-# Luego acceder:
-curl http://<EXTERNAL-IP>/api
-curl http://<EXTERNAL-IP>/health
-```
-
-### Opción 2: Port Forward (Local/Minikube)
-
-```bash
-kubectl port-forward -n estafen svc/estafen 8080:80
-
-# En otra terminal:
-curl http://localhost:8080/api
-curl http://localhost:8080/health
-```
-
-## **Probar Auto-scaling (HPA)**
-
-```bash
-# Ver estado del HPA
-kubectl get hpa -n estafen -w
-
-# Generar carga (en otra terminal)
-kubectl run -i --tty load-generator --rm --image=busybox --restart=Never -- /bin/sh
-
-# Dentro del pod:
-while true; do wget -q -O- http://estafen.estafen.svc.cluster.local/api; done
-
-# Observar cómo escala
-kubectl get pods -n estafen -w
-```
-
-## **Endpoints de la API**
-
-| Endpoint | Descripción |
-|----------|-------------|
-| `/api` | Información de la aplicación |
-| `/health` | Health check (liveness) |
-| `/ready` | Readiness check |
-
-## **Comandos Útiles**
-
-```bash
-# Ver logs en tiempo real
-kubectl logs -n estafen -l app.kubernetes.io/name=estafen -f
-
-# Describir un pod
-kubectl describe pod -n estafen <pod-name>
-
-# Ejecutar shell en un pod
-kubectl exec -it -n estafen <pod-name> -- /bin/sh
-
-# Actualizar la aplicación
-helm upgrade estafen . -n estafen
-
-# Rollback
-helm rollback estafen -n estafen
-
-# Desinstalar
-helm uninstall estafen -n estafen
-```
-
-## **Estructura del Proyecto**
-
-```
-k8s-helm-estafen/
-├── app/
-│   ├── server.js          # Aplicación Node.js
-│   └── package.json
-├── Dockerfile             # Imagen Docker
-├── .dockerignore
-├── Chart.yaml             # Metadatos del chart
-├── values.yaml            # Configuración
-├── .helmignore
-├── README.md
-└── templates/
-    ├── _helpers.tpl       # Helpers de Helm
-    ├── NOTES.txt          # Notas post-instalación
-    ├── namespace.yaml     # Namespace
-    ├── deployment.yaml    # Deployment (2 réplicas)
-    ├── service.yaml       # LoadBalancer
-    ├── ingress.yaml       # Ingress (opcional)
-    ├── serviceaccount.yaml
-    ├── clusterrole.yaml   # RBAC
-    ├── clusterrolebinding.yaml
-    └── hpa.yaml           # Auto-scaling
-```
-
-## **Personalización**
-
-### Cambiar el número de réplicas
-
-```bash
-helm upgrade estafen . \
-  --set replicaCount=3 \
-  -n estafen
-```
-
-### Deshabilitar HPA
-
-```bash
-helm upgrade estafen . \
-  --set autoscaling.enabled=false \
-  -n estafen
-```
-
-### Usar ClusterIP en lugar de LoadBalancer
-
-```bash
-helm upgrade estafen . \
-  --set service.type=ClusterIP \
-  -n estafen
-```
-
-## **Troubleshooting**
-
-### Pods no inician
-
-```bash
-kubectl describe pod -n estafen <pod-name>
-kubectl logs -n estafen <pod-name>
-```
-
-### ImagePullBackOff
-
-- Verifica que la imagen existe en el registry
-- Verifica que tienes permisos para pull
-- Si usas registry privado, configura `imagePullSecrets`
-
-### LoadBalancer Pending
-
-- En Minikube: Usa `minikube tunnel` en otra terminal
-- En Kind: Usa port-forward en su lugar
-- En AWS/GCP: Espera 2-3 minutos
-
-##  **Desplegar en AWS EKS**
-
-Para desplegar en Amazon EKS, sigue la guía completa:
-
-📖 **[EKS-DEPLOYMENT.md](EKS-DEPLOYMENT.md)** - Guía paso a paso que incluye:
-- Crear cluster EKS con eksctl
-- Configurar ECR (Elastic Container Registry)
-- Construir y subir imagen Docker
-- Desplegar con Helm
-- Configurar External Secrets Operator
-- Monitoreo y troubleshooting
-- Costos estimados
-
-### Inicio Rápido EKS
-
-```bash
-# 1. Crear cluster
-eksctl create cluster --name estafen-cluster --region us-east-1
-
-# 2. Crear repo ECR y subir imagen
-aws ecr create-repository --repository-name estafen-api
-# ... (ver EKS-DEPLOYMENT.md para detalles)
-
-# 3. Desplegar
-helm install estafen . -n estafen --create-namespace
-
-# 4. Acceder
-kubectl get svc estafen -n estafen
-```
-
-## **Gestión Segura de Secretos**
-
-Para usar AWS Secrets Manager en lugar de secretos planos:
-
-**[SECRETS-GUIDE.md](SECRETS-GUIDE.md)** - Guía completa de External Secrets Operator
-
-### Características
-- ✅ Secretos encriptados en AWS Secrets Manager
-- ✅ Sincronización automática con Kubernetes
-- ✅ Rotación de secretos
-- ✅ Auditoría con CloudTrail
-- ✅ IRSA (IAM Roles for Service Accounts)
-
-## **Próximos Pasos**
-
-1. Desplegar la aplicación básica
-2. Agregar Prometheus y Grafana para monitoring
-3. Habilitar Ingress con TLS
-4. Agregar una base de datos
-5. Implementar CI/CD con GitHub Actions
-
-## **Errores que ocurrieron y Soluciones**
-
-### Error 1: Docker Build - Autenticación Fallida
-
-**Síntoma:**
-```
-ERROR: failed to solve: failed to fetch oauth token: unexpected status from GET request to 
-https://auth.docker.io/token: 401 Unauthorized: incorrect username or password
-```
-
-**Causa:**
-Las credenciales de Docker Hub no estaban correctas
-**Solución:**
-```bash
-# Cerrar sesión de Docker Hub
-docker logout
-
-# Iniciar sesión nuevamente
-docker login
-
-# Verificar que funciona
-docker build -t estafen/api:1.0.0 .
-```
-
-### Error 2: Kubernetes Cluster Unreachable
-
-**Síntoma:**
-```
-Error: INSTALLATION FAILED: cluster reachability check failed: kubernetes cluster unreachable: 
-Get "https://127.0.0.1:51142/version": dial tcp 127.0.0.1:51142: connect: connection refused
-```
-
-**Causa:**
-El clúster de Kubernetes no está corriendo o no está habilitado.
-
-**Solución para Docker Desktop:**
-Habilita el clúster de Kubernetes en Docker Desktop.
-
-**Verificar:**
-```bash
-kubectl cluster-info
-kubectl get nodes
-```
-
-### Error 3: External IP no Accesible en kind
-
-**Síntoma:**
-El servicio muestra una EXTERNAL-IP (ejemplo: `172.18.0.6`) pero `curl` no puede conectarse:
-```bash
-kubectl get svc estafen -n estafen
-# NAME      TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)
-# estafen   LoadBalancer   10.96.47.203   172.18.0.6    80:32441/TCP
-
-curl http://172.18.0.6/api
-# curl: (28) Connection timed out
-```
-
-**Causa:**
-En kind (Kubernetes in Docker), la IP externa está en la red interna de Docker y no es accesible directamente desde el host.
-
-**Solución: Usar Port Forward**
-```bash
-# Crear un port forward del servicio
-kubectl port-forward -n estafen svc/estafen 8080:80
-
-# En otra terminal, acceder vía localhost
-curl http://localhost:8080/api
-curl http://localhost:8080/health
-```
-
+I now have a functional Chart that deploys the entire online store with a single command. It serves as a complete testing environment running locally, which helped me understand how microservices interact and how to manage complex configurations with Helm.

@@ -1,0 +1,49 @@
+{{- if .Values.shippingService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.shippingService.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: {{ .Values.shippingService.name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.shippingService.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.shippingService.name }}
+    spec:
+      serviceAccountName: {{ .Values.shippingService.name }}
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - name: server
+        image: {{ .Values.images.repository }}/{{ .Values.shippingService.image }}:{{ .Values.images.tag }}
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.shippingService.port }}
+        env:
+        - name: PORT
+          value: "{{ .Values.shippingService.port }}"
+        readinessProbe:
+          periodSeconds: 5
+          grpc:
+            port: {{ .Values.shippingService.port }}
+        livenessProbe:
+          grpc:
+            port: {{ .Values.shippingService.port }}
+        resources:
+          {{- toYaml .Values.shippingService.resources | nindent 10 }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+{{- end }}

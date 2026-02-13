@@ -1,0 +1,17 @@
+{{- if .Values.productCatalogService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.productCatalogService.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: {{ .Values.productCatalogService.name }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Values.productCatalogService.name }}
+  ports:
+  - name: grpc
+    port: {{ .Values.productCatalogService.port }}
+    targetPort: {{ .Values.productCatalogService.port }}
+{{- end }}

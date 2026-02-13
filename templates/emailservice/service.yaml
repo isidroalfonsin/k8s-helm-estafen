@@ -1,0 +1,17 @@
+{{- if .Values.emailService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.emailService.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: {{ .Values.emailService.name }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Values.emailService.name }}
+  ports:
+  - name: grpc
+    port: {{ .Values.emailService.port }}
+    targetPort: {{ .Values.emailService.port }}
+{{- end }}

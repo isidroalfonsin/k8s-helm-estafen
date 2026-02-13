@@ -1,0 +1,52 @@
+{{- if .Values.cartService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.cartService.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: {{ .Values.cartService.name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.cartService.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.cartService.name }}
+    spec:
+      serviceAccountName: {{ .Values.cartService.name }}
+      terminationGracePeriodSeconds: 5
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - name: server
+        image: {{ .Values.images.repository }}/{{ .Values.cartService.image }}:{{ .Values.images.tag }}
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.cartService.port }}
+        env:
+        - name: REDIS_ADDR
+          value: {{ .Values.cartService.env.redisAddr | quote }}
+        readinessProbe:
+          initialDelaySeconds: 15
+          grpc:
+            port: {{ .Values.cartService.port }}
+        livenessProbe:
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          grpc:
+            port: {{ .Values.cartService.port }}
+        resources:
+          {{- toYaml .Values.cartService.resources | nindent 10 }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+{{- end }}

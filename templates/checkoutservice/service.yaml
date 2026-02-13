@@ -1,0 +1,17 @@
+{{- if .Values.checkoutService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.checkoutService.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: {{ .Values.checkoutService.name }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Values.checkoutService.name }}
+  ports:
+  - name: grpc
+    port: {{ .Values.checkoutService.port }}
+    targetPort: {{ .Values.checkoutService.port }}
+{{- end }}
