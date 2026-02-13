@@ -10,7 +10,20 @@ I chose this application because it represents a real-world e-commerce scenario:
 
 ## Project Demo & Screenshots
 
-Detailed screenshots and a video demonstration of the project's functionality added in screenshots folder to showcase the fully operational microservices architecture.
+## Project Demo & Screenshots
+
+Here is a quick demonstration of the application running locally:
+
+![Project Demo](screenshots/demo.gif)
+
+### Dashboard & Monitoring
+
+**Docker Desktop Dashboard:**
+![Docker Desktop](screenshots/DockerhubConsole.png)
+
+**Real-time Monitoring with K9s:**
+![K9s Pods](screenshots/K9sPodsRunning.png)
+
 
 ## What I Did
 
