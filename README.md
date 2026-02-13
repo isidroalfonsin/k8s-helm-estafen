@@ -8,6 +8,10 @@ The main goal was to take a complex microservices architecture (11 services + da
 
 I chose this application because it represents a real-world e-commerce scenario: it consists of a Frontend in Go, Cart Service in C#, Recommendation Service in Python, Payment Service in Node.js, and more. All services communicate with each other via gRPC, making it perfect for testing Kubernetes orchestration.
 
+## Project Demo & Screenshots
+
+Detailed screenshots and a video demonstration of the project's functionality added in screenshots folder to showcase the fully operational microservices architecture.
+
 ## What I Did
 
 Instead of using loose Kubernetes manifests, I decided to package everything into a Helm Chart to have better control over the deployment.
