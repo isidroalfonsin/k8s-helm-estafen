@@ -30,3 +30,4 @@ values-secrets.yaml
 *.log
 tmp/
 temp/
+ARCHITECTURE.md

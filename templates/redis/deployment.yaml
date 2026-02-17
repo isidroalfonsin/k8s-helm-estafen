@@ -25,7 +25,8 @@ spec:
         image: {{ .Values.redis.image }}
         imagePullPolicy: {{ .Values.images.pullPolicy }}
         ports:
-        - containerPort: {{ .Values.redis.port }}
+        - containerPort: {{ .Values.redis.port }}  # Standard Redis port (6379)
+        # TCP probes: simpler than HTTP, just checks if port is open
         readinessProbe:
           periodSeconds: 5
           tcpSocket:
@@ -35,6 +36,7 @@ spec:
           tcpSocket:
             port: {{ .Values.redis.port }}
         volumeMounts:
+        # Mount point where Redis stores data
         - mountPath: /data
           name: redis-data
         resources:
@@ -48,5 +50,12 @@ spec:
           readOnlyRootFilesystem: true
       volumes:
       - name: redis-data
+        {{- if .Values.redis.persistence.enabled }}
+        # PersistentVolumeClaim: data persists across pod restarts (AWS/production)
+        persistentVolumeClaim:
+          claimName: {{ .Values.redis.name }}-pvc
+        {{- else }}
+        # emptyDir: temporary storage, data lost if pod restarts (local/dev)
         emptyDir: {}
+        {{- end }}
 {{- end }}

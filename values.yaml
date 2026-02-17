@@ -1,4 +1,4 @@
-# Global Configuration
+# Global configuration
 
 # Global image settings for all microservices
 images:
@@ -6,26 +6,26 @@ images:
   tag: "v0.10.4"
   pullPolicy: IfNotPresent
 
-# Service Account Configuration
+# Service Account configuration
 serviceAccount:
   create: true
   annotations: {}
   name: ""
 
-# Microservices Configuration
-# ---------------------------
+# Microservices configuration
 # Each service has its own section to configure:
 # - enable/disable
-# - specific image (if different from global)
+# - specific image
 # - resource limits (cpu/memory)
 # - environment variables
 
 # 1. Email Service (Python)
+# Sends order confirmation emails (not real implementation)
 emailService:
   enabled: true
   name: emailservice
   image: emailservice
-  port: 8080
+  port: 8080  # HTTP port for gRPC server
   resources:
     requests:
       cpu: 100m
@@ -35,11 +35,12 @@ emailService:
       memory: 128Mi
 
 # 2. Product Catalog Service (Go)
+# Provides product listings and search functionality
 productCatalogService:
   enabled: true
   name: productcatalogservice
   image: productcatalogservice
-  port: 3550
+  port: 3550  # gRPC port for product catalog queries
   resources:
     requests:
       cpu: 100m
@@ -49,11 +50,12 @@ productCatalogService:
       memory: 128Mi
 
 # 3. Currency Service (Node.js)
+# Converts prices between currencies
 currencyService:
   enabled: true
   name: currencyservice
   image: currencyservice
-  port: 7000
+  port: 7000  # gRPC port for currency conversion
   resources:
     requests:
       cpu: 100m
@@ -63,11 +65,12 @@ currencyService:
       memory: 128Mi
 
 # 4. Payment Service (Node.js)
+# Processes credit card payments (not real implementation)
 paymentService:
   enabled: true
   name: paymentservice
   image: paymentservice
-  port: 50051
+  port: 50051  # Standard gRPC port
   resources:
     requests:
       cpu: 100m
@@ -77,11 +80,12 @@ paymentService:
       memory: 128Mi
 
 # 5. Shipping Service (Go)
+# Calculates shipping costs and provides quotes
 shippingService:
   enabled: true
   name: shippingservice
   image: shippingservice
-  port: 50051
+  port: 50051  # Standard gRPC port
   resources:
     requests:
       cpu: 100m
@@ -91,11 +95,12 @@ shippingService:
       memory: 128Mi
 
 # 6. Cart Service (C#)
+# Manages shopping cart state, stores data in Redis
 cartService:
   enabled: true
   name: cartservice
   image: cartservice
-  port: 7070
+  port: 7070  # gRPC port for cart operations
   resources:
     requests:
       cpu: 200m
@@ -105,14 +110,16 @@ cartService:
       memory: 128Mi
 
 # 7. Frontend (Go) - The main public interface
+# Web UI that users interact with
 frontend:
   enabled: true
   name: frontend
   image: frontend
   # Service type LoadBalancer for external access, ClusterIP for internal
   service:
-    type: LoadBalancer 
-    port: 80
+    type: LoadBalancer  # Exposes service externally (gets public IP in cloud)
+    port: 80  # External port (what users connect to)
+  port: 8080  # Internal container port (where app listens)
   env: 
     platform: local 
   resources:
@@ -124,11 +131,12 @@ frontend:
       memory: 128Mi
 
 # 8. Checkout Service (Go)
+# Orchestrates the checkout process (cart, payment, shipping, email)
 checkoutService:
   enabled: true
   name: checkoutservice
   image: checkoutservice
-  port: 5050
+  port: 5050  # gRPC port for checkout operations
   resources:
     requests:
       cpu: 100m
@@ -138,11 +146,12 @@ checkoutService:
       memory: 128Mi
 
 # 9. Recommendation Service (Python)
+# Suggests products based on cart contents
 recommendationService:
   enabled: true
   name: recommendationservice
   image: recommendationservice
-  port: 8080
+  port: 8080  # HTTP port for gRPC server
   resources:
     requests:
       cpu: 100m
@@ -152,11 +161,12 @@ recommendationService:
       memory: 450Mi
 
 # 10. Ad Service (Java)
+# Serves contextual advertisements
 adService:
   enabled: true
   name: adservice
   image: adservice
-  port: 9555
+  port: 9555  # gRPC port for ad serving
   resources:
     requests:
       cpu: 200m
@@ -166,6 +176,7 @@ adService:
       memory: 300Mi
 
 # 11. Load Generator (Python/Locust) - Simulates user traffic
+# Continuously sends requests to simulate real users
 loadGenerator:
   enabled: true
   name: loadgenerator
@@ -180,13 +191,17 @@ loadGenerator:
 
 # Database Configuration
 # ----------------------
-# Redis Configuration (Used by Cart Service)
+# Redis Configuration (Used by Cart service)
 redis:
   enabled: true
   name: redis-cart
   # Using public ECR image for better availability than Docker Hub
   image: public.ecr.aws/docker/library/redis:alpine
-  port: 6379
+  port: 6379  # Standard Redis port
+  persistence:
+    enabled: false  # Set to true in values-aws.yaml for persistent storage
+    size: 8Gi  # Storage size for PVC
+    storageClass: ""  # Leave empty to use default storage class
   resources:
     requests:
       cpu: 70m

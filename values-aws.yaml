@@ -1,0 +1,54 @@
+
+# This file contains only the values that differ from values.yaml for AWS deployment
+# Usage: helm install estafen . -f values-aws.yaml
+
+# Frontend configuration for cloud
+frontend:
+  service:
+    type: LoadBalancer  # In AWS, this creates an actual ELB/NLB with public IP
+  env:
+    platform: aws  # Changed from local
+  resources:
+    requests:
+      cpu: 200m      # Increased for production traffic
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+# Redis with persistent storage for AWS
+redis:
+  persistence:
+    enabled: true  # Enable persistent volumes in AWS
+    size: 8Gi
+    storageClass: gp3  # AWS EBS gp3 (faster and cheaper than gp2)
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 200m
+      memory: 512Mi
+
+# Increase resources for all services to handle production load
+cartService:
+  resources:
+    requests:
+      cpu: 300m
+      memory: 128Mi
+    limits:
+      cpu: 600m
+      memory: 256Mi
+
+checkoutService:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 128Mi
+    limits:
+      cpu: 400m
+      memory: 256Mi
+
+# Load generator - disable in production
+loadGenerator:
+  enabled: false  # Don't simulate traffic in production

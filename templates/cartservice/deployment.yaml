@@ -27,10 +27,12 @@ spec:
         image: {{ .Values.images.repository }}/{{ .Values.cartService.image }}:{{ .Values.images.tag }}
         imagePullPolicy: {{ .Values.images.pullPolicy }}
         ports:
-        - containerPort: {{ .Values.cartService.port }}
+        - containerPort: {{ .Values.cartService.port }}  # gRPC port for cart operations
         env:
+        # Redis connection: where cart data is stored
         - name: REDIS_ADDR
           value: {{ .Values.cartService.env.redisAddr | quote }}
+        # gRPC health checks (different from HTTP probes)
         readinessProbe:
           initialDelaySeconds: 15
           grpc:
