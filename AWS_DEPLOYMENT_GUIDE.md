@@ -212,11 +212,7 @@ kubectl describe svc frontend-external -n estafen
 
 ## Cluster cleanup
 
-1. EKS → Clusters → `estafen-cluster`
-2. Compute tab → Select node group → "Delete"
-3. Wait for node group deletion (~5 minutes)
-4. Back to cluster → "Delete cluster"
-5. Type cluster name to confirm → "Delete"
+All AWS resources (EKS Cluster, NAT Gateway, and VPC) were deleted after deployment to avoid unnecessary costs.
 
 ---
 
@@ -246,11 +242,4 @@ The EKS Auto Mode cluster had restricted IAM permissions (IMDSv2 hop limit/OIDC)
 
 ---
 
-# Next steps
 
-Once deployed, you can:
-- Set up a custom domain with Route 53
-- Add HTTPS with AWS Certificate Manager + Ingress
-- Configure autoscaling with HPA
-- Set up monitoring with CloudWatch Container Insights
-- Implement CI/CD with GitHub Actions or AWS CodePipeline
