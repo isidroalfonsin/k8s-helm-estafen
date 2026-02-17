@@ -22,3 +22,17 @@ docs/
 README.md
 LICENSE
 Makefile
+screenshots/
+.git/
+*.mov
+*.mp4
+*.avi
+*.mkv
+*.webm
+
+# Documentation media
+*.png
+*.jpg
+*.jpeg
+*.gif
+

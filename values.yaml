@@ -6,6 +6,10 @@ images:
   tag: "v0.10.4"
   pullPolicy: IfNotPresent
 
+# Namespace configuration
+namespace:
+  name: estafen
+
 # Service Account configuration
 serviceAccount:
   create: true
@@ -101,6 +105,8 @@ cartService:
   name: cartservice
   image: cartservice
   port: 7070  # gRPC port for cart operations
+  env:
+    redisAddr: "redis-cart:6379"
   resources:
     requests:
       cpu: 200m
@@ -122,6 +128,7 @@ frontend:
   port: 8080  # Internal container port (where app listens)
   env: 
     platform: local 
+    cymbalBranding: "false"
   resources:
     requests:
       cpu: 100m

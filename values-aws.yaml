@@ -19,9 +19,9 @@ frontend:
 # Redis with persistent storage for AWS
 redis:
   persistence:
-    enabled: true  # Enable persistent volumes in AWS
+    enabled: false  # Temporary disabled due to EBS CSI driver issues in EKS Auto Mode
     size: 8Gi
-    storageClass: gp3  # AWS EBS gp3 (faster and cheaper than gp2)
+    storageClass: gp2  # AWS EBS gp2 (built-in provisioner)
   resources:
     requests:
       cpu: 100m
