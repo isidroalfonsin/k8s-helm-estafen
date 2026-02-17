@@ -155,9 +155,6 @@ aws eks update-kubeconfig --name estafen-cluster --region us-east-1
 
 # Verify connection
 kubectl get nodes
-
-![Kubectl get nodes](screenshots/kubectl%20get%20nodes%20aws.png)
-
 ```
 
 ## Step 6: Deploy the Helm chart
@@ -171,8 +168,6 @@ helm install estafen . -n estafen --create-namespace -f values-aws.yaml
 
 # Watch the pods start up
 kubectl get pods -n estafen -w
-
-![Pods Running](screenshots/kubectl%20get%20pods%20aws.png)
 ```
 
 ## Step 7: Access the application
@@ -181,16 +176,20 @@ kubectl get pods -n estafen -w
 # Get the LoadBalancer URL (may take 2-3 minutes to provision)
 kubectl get svc frontend-external -n estafen
 
-![LoadBalancer SVC](screenshots/kubectl%20get%20svc%20%20aws.png)
-
 # Copy the EXTERNAL-IP and open it in your browser
-
-![Application Online](screenshots/SiteOnlineinAWS.png)
 ```
 
 ---
 
 # Verify deployment
+
+## Check nodes
+
+```bash
+kubectl get nodes
+```
+
+![Kubectl get nodes](screenshots/kubectl%20get%20nodes%20aws.png)
 
 ## Check pod status
 
@@ -199,14 +198,20 @@ kubectl get svc frontend-external -n estafen
 kubectl get pods -n estafen
 ```
 
+![Pods Running](screenshots/kubectl%20get%20pods%20aws.png)
+
 ## Check LoadBalancer
 
 ```bash
 # Get LoadBalancer details
 kubectl describe svc frontend-external -n estafen
-
-# Look for "LoadBalancer Ingress" field with AWS ELB URL
 ```
+
+![LoadBalancer SVC](screenshots/kubectl%20get%20svc%20%20aws.png)
+
+## Final Application Status
+
+![Application Online](screenshots/SiteOnlineinAWS.png)
 
 ---
 
