@@ -1,12 +1,17 @@
-# Project: Online Boutique deployment on Kubernetes with Helm
+# Project: Online Boutique deployment on Kubernetes with Helm locally and in AWS EKS
 
-This project documents my process of adapting and deploying Google's "Online Boutique" (a microservices demo application) into a local Kubernetes environment using Helm.
+
+
+This project documents my process of adapting and deploying Google's "Online Boutique" (a microservices demo application) into a local Kubernetes environment in Dockerhub Kubernetes using Helm and later into AWS EKS. You can find the detailed steps for the cloud setup in the [AWS EKS Deployment Guide](AWS_DEPLOYMENT_GUIDE.md).
 
 The main goal was to take a complex microservices architecture (11 services + database) and build a custom Helm chart from scratch to deploy it efficiently on my local machine.
 
 ## About the application
 
-I chose this application because it represents a real-world e-commerce scenario: it consists of a frontend in Go, cart service in C#, recommendation service in Python, payment service in Node.js, and more. All services communicate with each other via gRPC, making it perfect for testing Kubernetes orchestration.
+I chose this application because it represents a real-world e-commerce scenario: it consists of a frontend in Go, cart service in C#, recommendation service in Python, payment service in Node.js, and more. All services communicate with each other via gRPC, making it perfect for testing Kubernetes orchestration. 
+
+> [!NOTE]
+> **About the name:** "Estafen" is the title of the first book by the renowned Argentine author Juan Filloy. I chose this name as a personal tribute to his literary legacy.
 
 ## Project demo & screenshots
 
@@ -80,14 +85,15 @@ helm install estafen . -n estafen --create-namespace -f values-aws.yaml
 # Get the LoadBalancer URL (may take a few minutes)
 kubectl get svc frontend-external -n estafen
 # Access via the EXTERNAL-IP shown
+
+For a complete walkthrough with screenshots of the AWS setup, check the [AWS EKS Deployment Guide](AWS_DEPLOYMENT_GUIDE.md).
 ```
 
 **Key differences in AWS deployment:**
 - Increased resource limits for production traffic
 - LoadBalancer gets a real public IP
 - Load generator disabled (no simulated traffic needed)
-- Recommended: use AWS ElastiCache for Redis instead of in-cluster deployment
 
 ## Final result
 
-I now have a functional chart that deploys the entire online store with a single command. It serves as a complete testing environment running locally, which helped me understand how microservices interact and how to manage complex configurations with Helm.
+I now have a functional chart that deploys the entire online store with a single command. It serves as a complete testing environment running locally and also in a Cloud environment.
